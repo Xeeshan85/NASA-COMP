@@ -277,8 +277,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 | Name | Role | LinkedIn |
 |------|------|----------|
-| **M Zeeshan  ** | Lead Developer & System Architect | [LinkedIn Profile](https://www.linkedin.com/in/m-zeeshan-naveed/) |
-| **M Faheem   ** | Data Scientist & Backend Developer | [LinkedIn Profile](https://www.linkedin.com/in/muhammad-faheem-367a1b279) |
+| **M Zeeshan** | Lead Developer & System Architect | [LinkedIn Profile](https://www.linkedin.com/in/m-zeeshan-naveed/) |
+| **M Faheem** | Data Scientist & Backend Developer | [LinkedIn Profile](https://www.linkedin.com/in/muhammad-faheem-367a1b279) |
 | **Amar Rameez** | AI Developer & QA & UI/UX | [LinkedIn Profile](https://www.linkedin.com/in/amar-rameez-a5337022a/) |
 
 *Developed for NASA Space Apps Challenge 2025*
@@ -291,7 +291,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 *Built with ❤️ for NASA Space Apps Challenge 2025*
 
-[![GitHub stars](https://img.shields.io/github/stars/Xeeshan85/aeris?style=social)](https://github.com/Xeeshan85/air-emissions-regional-intelligence-system)
-[![GitHub forks](https://img.shields.io/github/forks/Xeeshan85/aeris?style=social)](https://github.com/Xeeshan85/air-emissions-regional-intelligence-system/fork)
+[![GitHub stars](https://img.shields.io/github/stars/Xeeshan85/air-emissions-regional-intelligence-system?style=social)](https://github.com/Xeeshan85/air-emissions-regional-intelligence-system)
+[![GitHub forks](https://img.shields.io/github/forks/Xeeshan85/air-emissions-regional-intelligence-system?style=social)](https://github.com/Xeeshan85/air-emissions-regional-intelligence-system/fork)
 
 </div>
