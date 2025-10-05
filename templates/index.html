@@ -191,6 +191,35 @@
         pollutant movement prediction available when weather options are
         enabled.
       </footer>
+        <h1 style="margin-top:28px;">Route Air Safety (Beta)</h1>
+        <form action="/route" method="post" style="border:1px solid #000; padding:16px;">
+            <label for="origin">Origin (location)</label>
+            <input type="text" name="origin" id="origin" placeholder="e.g., San Francisco, CA OR 34.9000, -119.7000" required>
+            <div class="hint">You can enter a place name or coordinates as "lat, lon".</div>
+
+            <label for="destination" style="margin-top:8px;">Destination (location)</label>
+            <input type="text" name="destination" id="destination" placeholder="e.g., Los Angeles, CA OR 34.9000, -119.7000" required>
+            <div class="hint">Tip: For wildfire areas, coordinates work best. Example: 34.9000, -119.7000</div>
+
+            <div class="row">
+                <div>
+                    <label for="route_gases">Gases (comma-separated)</label>
+                    <input type="text" name="gases" id="route_gases" value="NO2, AI">
+                    <div class="hint">Used to score air quality along the path.</div>
+                </div>
+                <div>
+                    <label for="grid_step_km">Grid step (km)</label>
+                    <input type="number" step="1" name="grid_step_km" id="grid_step_km" value="20">
+                    <div class="hint">Smaller = slower, more precise.</div>
+                </div>
+            </div>
+
+            <button type="submit">Analyze Route</button>
+        </form>
+
+        <footer>
+            Cached data from TempData is used. Enter a location or coords, then Analyze.
+        </footer>
     </div>
   </body>
 </html>

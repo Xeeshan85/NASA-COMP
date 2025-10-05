@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from matplotlib.patches import Circle
+import math
+import json
+import requests
 
 # Import weather service
 from weather_service import get_weather_data, get_pollutant_movement_prediction
@@ -371,6 +374,73 @@ def visualize_multi_gas(gas_data: Dict[str, Any], location_name: str,
     return f"/static/outputs/{out_name}"
 
 
+def gather_hotspots_geojson(gas_data: Dict[str, Any], limit: int = 50) -> Dict[str, Any]:
+    """Collect hotspots across gases and convert to GeoJSON with center point and radius_km for circle rendering."""
+    features: List[Dict[str, Any]] = []
+    count = 0
+    for gas, info in gas_data.items():
+        hs = info.get('hotspots') or []
+        for h in hs:
+            if count >= limit:
+                break
+            lat_min, lat_max = h.get('lat_range', (h.get('center_lat'), h.get('center_lat')))
+            lon_min, lon_max = h.get('lon_range', (h.get('center_lon'), h.get('center_lon')))
+            center_lat = float(h.get('center_lat'))
+            center_lon = float(h.get('center_lon'))
+            lat_span_km = abs(float(lat_max) - float(lat_min)) * 111.0
+            lon_km_factor = 111.0 * max(0.1, math.cos(math.radians(center_lat)))
+            lon_span_km = abs(float(lon_max) - float(lon_min)) * lon_km_factor
+            radius_km = max(2.0, 0.5 * math.hypot(lat_span_km, lon_span_km))
+            props = {
+                "gas": h.get('gas', gas),
+                "level": h.get('level'),
+                "max_value": h.get('max_value'),
+                "mean_value": h.get('mean_value'),
+                "area_km2": h.get('area_km2'),
+                "radius_km": radius_km,
+            }
+            place = reverse_geocode(center_lat, center_lon)
+            if place:
+                props["place"] = place
+            features.append({
+                "type": "Feature",
+                "geometry": {"type": "Point", "coordinates": [center_lon, center_lat]},
+                "properties": props
+            })
+            count += 1
+    return {"type": "FeatureCollection", "features": features}
+
+
+def build_hotspot_circles(gas_data: Dict[str, Any], limit: int = 200) -> List[Dict[str, Any]]:
+    """Build simplified hotspot circles with center, radius_km, and severity (0-4)."""
+    level_to_sev = {'moderate': 1, 'unhealthy': 2, 'very_unhealthy': 3, 'hazardous': 4}
+    circles: List[Dict[str, Any]] = []
+    count = 0
+    for gas, info in gas_data.items():
+        hs = info.get('hotspots') or []
+        for h in hs:
+            if count >= limit:
+                break
+            lat_min, lat_max = h.get('lat_range', (h.get('center_lat'), h.get('center_lat')))
+            lon_min, lon_max = h.get('lon_range', (h.get('center_lon'), h.get('center_lon')))
+            center_lat = float(h.get('center_lat'))
+            center_lon = float(h.get('center_lon'))
+            lat_span_km = abs(float(lat_max) - float(lat_min)) * 111.0
+            lon_km_factor = 111.0 * max(0.1, math.cos(math.radians(center_lat)))
+            lon_span_km = abs(float(lon_max) - float(lon_min)) * lon_km_factor
+            radius_km = max(2.0, 0.5 * math.hypot(lat_span_km, lon_span_km))
+            sev = level_to_sev.get(h.get('level'), 0)
+            circles.append({
+                'lat': center_lat,
+                'lon': center_lon,
+                'radius_km': radius_km,
+                'severity': sev,
+                'gas': h.get('gas', gas),
+            })
+            count += 1
+    return circles
+
+
 def visualize_tripanel_for_gas(gas: str, datatree: Any, hotspots: List[Dict[str, Any]],
                                regional_alerts: List[Dict[str, Any]],
                                thresholds: Dict[str, float]) -> str:
@@ -666,6 +736,419 @@ async def analyze(
     })
 
 
+def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
+
+
+def parse_coordinates(text: str) -> Optional[Tuple[float, float]]:
+    try:
+        if not text:
+            return None
+        parts = text.split(',')
+        if len(parts) != 2:
+            return None
+        lat = float(parts[0].strip())
+        lon = float(parts[1].strip())
+        if -90 <= lat <= 90 and -180 <= lon <= 180:
+            return (lat, lon)
+    except Exception:
+        return None
+    return None
+
+
+def robust_geocode(name: str) -> Optional[Tuple[float, float]]:
+    # 1) If coordinates provided, use them directly
+    coords = parse_coordinates(name)
+    if coords:
+        return coords
+    # Normalize by removing generic terms (e.g., "region", "wildfire", "fire", "area")
+    def _clean(n: str) -> str:
+        remove = ["region", "wildfire", "fire", "area"]
+        tokens = [t for t in n.replace("-", " ").split() if t.lower() not in remove]
+        return " ".join(tokens)
+
+    cleaned = _clean(name)
+
+    # 2) Try plain and cleaned
+    c = geocode_location(name)
+    if c:
+        return c
+    if cleaned and cleaned != name:
+        c = geocode_location(cleaned)
+        if c:
+            return c
+    # 3) Try appending common qualifiers
+    for suffix in [", California", ", USA", ", CA, USA", " California, USA", ", Santa Barbara County, CA"]:
+        c = geocode_location(name + suffix)
+        if c:
+            return c
+        if cleaned:
+            c = geocode_location(cleaned + suffix)
+            if c:
+                return c
+    # 4) Try bounded by US West viewbox to bias search
+    try:
+        geolocator = Nominatim(user_agent="tempo_pollution_frontend_bias")
+        # Prefer US results
+        location = geolocator.geocode(name, timeout=10, country_codes='us')
+        if location:
+            return (float(location.latitude), float(location.longitude))
+        if cleaned:
+            location = geolocator.geocode(cleaned, timeout=10, country_codes='us')
+            if location:
+                return (float(location.latitude), float(location.longitude))
+        # Try stronger California bias
+        location = geolocator.geocode(f"{name}, California, USA", timeout=10, country_codes='us')
+        if location:
+            return (float(location.latitude), float(location.longitude))
+    except Exception:
+        pass
+    return None
+
+
+def sample_line(lat1: float, lon1: float, lat2: float, lon2: float, step_km: float) -> List[Tuple[float, float]]:
+    total = haversine_km(lat1, lon1, lat2, lon2)
+    n = max(2, int(total / max(1.0, step_km)))
+    pts = []
+    for i in range(n + 1):
+        t = i / n
+        lat = lat1 + (lat2 - lat1) * t
+        lon = lon1 + (lon2 - lon1) * t
+        pts.append((lat, lon))
+    return pts
+
+
+def build_severity_grid(gas_data: Dict[str, Any], gases: List[str], bounds: Tuple[float, float, float, float],
+                        step_deg: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    lon_min, lat_min, lon_max, lat_max = bounds
+    lats = np.arange(lat_min, lat_max + step_deg, step_deg)
+    lons = np.arange(lon_min, lon_max + step_deg, step_deg)
+    grid = np.zeros((len(lats), len(lons)))
+    # Aggregate max severity per cell across requested gases
+    for gas in gases:
+        info = gas_data.get(gas)
+        if not info or info.get('data') is None:
+            continue
+        da = info['data']
+        try:
+            vals = da.values
+            lats_raw = info['datatree']["geolocation/latitude"].values
+            lons_raw = info['datatree']["geolocation/longitude"].values
+            if lats_raw.ndim == 1 and lons_raw.ndim == 1:
+                lon_grid, lat_grid = np.meshgrid(lons_raw, lats_raw)
+            else:
+                lat_grid = lats_raw
+                lon_grid = lons_raw
+            for i, glat in enumerate(lats):
+                for j, glon in enumerate(lons):
+                    mask = (np.abs(lat_grid - glat) <= step_deg/2) & (np.abs(lon_grid - glon) <= step_deg/2)
+                    if np.any(mask):
+                        v = np.nanmax(vals[mask])
+                        _, sev = classify_pollution_level(float(v), gas)
+                        grid[i, j] = max(grid[i, j], sev)
+        except Exception:
+            continue
+    return grid, lats, lons
+
+
+def a_star_avoid_pollution(grid: np.ndarray, lats: np.ndarray, lons: np.ndarray,
+                           start: Tuple[float, float], goal: Tuple[float, float]) -> List[Tuple[float, float]]:
+    # Map lat/lon to nearest grid indices
+    def idx_for(lat: float, lon: float) -> Tuple[int, int]:
+        i = int(np.clip(np.searchsorted(lats, lat), 1, len(lats)-1))
+        j = int(np.clip(np.searchsorted(lons, lon), 1, len(lons)-1))
+        # choose closer neighbor
+        i = i-1 if abs(lats[i-1]-lat) <= abs(lats[i]-lat) else i
+        j = j-1 if abs(lons[j-1]-lon) <= abs(lons[j]-lon) else j
+        return i, j
+
+    si, sj = idx_for(start[0], start[1])
+    gi, gj = idx_for(goal[0], goal[1])
+
+    from heapq import heappush, heappop
+    open_set = []
+    heappush(open_set, (0, (si, sj)))
+    came_from = {}
+    gscore = {(si, sj): 0.0}
+
+    def heuristic(i: int, j: int) -> float:
+        return abs(i - gi) + abs(j - gj)
+
+    neighbors = [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]
+
+    while open_set:
+        _, current = heappop(open_set)
+        if current == (gi, gj):
+            # reconstruct
+            path = [current]
+            while current in came_from:
+                current = came_from[current]
+                path.append(current)
+            path.reverse()
+            coords = [(float(lats[i]), float(lons[j])) for (i, j) in path]
+            return coords
+        ci, cj = current
+        for di, dj in neighbors:
+            ni, nj = ci + di, cj + dj
+            if ni < 0 or nj < 0 or ni >= grid.shape[0] or nj >= grid.shape[1]:
+                continue
+            # movement cost (diagonal slightly more) + pollution penalty
+            move_cost = 1.4 if di != 0 and dj != 0 else 1.0
+            pollution_penalty = 1.0 + grid[ni, nj] * 3.0
+            tentative = gscore[current] + move_cost * pollution_penalty
+            if (ni, nj) not in gscore or tentative < gscore[(ni, nj)]:
+                came_from[(ni, nj)] = current
+                gscore[(ni, nj)] = tentative
+                heappush(open_set, (tentative + heuristic(ni, nj), (ni, nj)))
+    return []
+
+
+def fetch_osrm_routes(o_lat: float, o_lon: float, d_lat: float, d_lon: float, alternatives: bool = True) -> List[Dict[str, Any]]:
+    """Fetch road routes from OSRM public server. Returns list of routes with geojson geometry."""
+    try:
+        alt_flag = 'true' if alternatives else 'false'
+        url = (
+            f"https://router.project-osrm.org/route/v1/driving/"
+            f"{o_lon:.6f},{o_lat:.6f};{d_lon:.6f},{d_lat:.6f}"
+            f"?overview=full&geometries=geojson&alternatives={alt_flag}&steps=false"
+        )
+        r = requests.get(url, timeout=15)
+        if r.status_code != 200:
+            return []
+        data = r.json()
+        if not data or data.get('code') != 'Ok':
+            return []
+        return data.get('routes', []) or []
+    except Exception:
+        return []
+
+
+def resample_polyline_km(coords: List[List[float]], step_km: float) -> List[Tuple[float, float]]:
+    """Resample a polyline (list of [lat, lon]) approximately every step_km along length."""
+    if not coords:
+        return []
+    out: List[Tuple[float, float]] = [(float(coords[0][0]), float(coords[0][1]))]
+    acc = 0.0
+    for i in range(1, len(coords)):
+        lat1, lon1 = float(coords[i-1][0]), float(coords[i-1][1])
+        lat2, lon2 = float(coords[i][0]), float(coords[i][1])
+        seg = haversine_km(lat1, lon1, lat2, lon2)
+        if seg <= 0:
+            continue
+        acc += seg
+        if acc >= max(0.5, step_km):
+            out.append((lat2, lon2))
+            acc = 0.0
+    if out[-1] != (float(coords[-1][0]), float(coords[-1][1])):
+        out.append((float(coords[-1][0]), float(coords[-1][1])))
+    return out
+
+
+def score_route_exposure(samples: List[Tuple[float, float]], gas_data: Dict[str, Any], gas_list: List[str],
+                         proximity_km: float = 10.0,
+                         hotspot_circles: Optional[List[Dict[str, Any]]] = None,
+                         hard_block_threshold: int = 3,
+                         hotspot_extra_buffer_km: float = 3.0) -> Tuple[float, List[List[float]], List[int], bool]:
+    """Compute exposure score and collect dangerous points for a sampled route.
+    Also return per-point severities for gradient rendering. Applies a proximity buffer around sample points.
+    """
+    danger_points: List[List[float]] = []
+    per_point_severity: List[int] = []
+    total_score: float = 0.0
+    blocked: bool = False
+
+    # Build per-gas coordinate grids once
+    per_gas_coords: Dict[str, Tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
+    for gas in gas_list:
+        info = gas_data.get(gas)
+        if not info or info.get('data') is None:
+            continue
+        try:
+            da = info['data']
+            vals = da.values
+            lats_raw = info['datatree']["geolocation/latitude"].values
+            lons_raw = info['datatree']["geolocation/longitude"].values
+            if lats_raw.ndim == 1 and lons_raw.ndim == 1:
+                lon_grid, lat_grid = np.meshgrid(lons_raw, lats_raw)
+            else:
+                lat_grid = lats_raw
+                lon_grid = lons_raw
+            per_gas_coords[gas] = (vals, lat_grid, lon_grid)
+        except Exception:
+            continue
+
+    # Convert proximity to degrees approximately at mid-latitude
+    # 1 deg lat ~ 111 km; 1 deg lon ~ 111 km * cos(lat)
+    for lat, lon in samples:
+        max_sev = 0
+        lat_tol = proximity_km / 111.0
+        lon_tol = proximity_km / (111.0 * max(0.1, math.cos(math.radians(lat))))
+        for gas, triple in per_gas_coords.items():
+            vals, lat_grid, lon_grid = triple
+            try:
+                mask = (np.abs(lat_grid - lat) <= lat_tol) & (np.abs(lon_grid - lon) <= lon_tol)
+                if np.any(mask):
+                    v = float(np.nanmax(vals[mask]))
+                else:
+                    # fallback nearest
+                    idx = np.unravel_index(np.nanargmin((lat_grid - lat)**2 + (lon_grid - lon)**2), lat_grid.shape)
+                    v = float(vals[idx])
+                _, sev = classify_pollution_level(v, gas)
+                max_sev = max(max_sev, sev)
+            except Exception:
+                continue
+        # Also consider hotspot circles (whole radius), if provided
+        if hotspot_circles:
+            for c in hotspot_circles:
+                # quick bounding-box precheck in degrees
+                d_km = haversine_km(lat, lon, c['lat'], c['lon'])
+                if d_km <= (c['radius_km'] + hotspot_extra_buffer_km):
+                    max_sev = max(max_sev, int(c.get('severity', 0)))
+        per_point_severity.append(max_sev)
+        total_score += max_sev
+        if max_sev >= hard_block_threshold:
+            danger_points.append([lat, lon])
+            blocked = True
+    # Strong penalty for blocked routes so selector avoids them when possible
+    if blocked:
+        total_score += 1e6
+    return total_score, danger_points, per_point_severity, blocked
+
+
+@app.post("/route", response_class=HTMLResponse)
+async def analyze_route(
+    request: Request,
+    origin: str = Form(...),
+    destination: str = Form(...),
+    gases: Optional[str] = Form(default="NO2,AI"),
+    grid_step_km: int = Form(default=20),
+):
+    origin_name = origin.strip()
+    dest_name = destination.strip()
+    ocoords = robust_geocode(origin_name)
+    dcoords = robust_geocode(dest_name)
+    if not ocoords or not dcoords:
+        return templates.TemplateResponse("index.html", {
+            "request": request,
+            "default_gases": ['NO2', 'CH2O', 'AI', 'PM', 'O3'],
+            "error": "Could not geocode origin/destination. Please try different names.",
+        })
+    o_lat, o_lon = ocoords
+    d_lat, d_lon = dcoords
+
+    gas_list = [g.strip().upper() for g in gases.split(',') if g.strip()]
+    gas_list = [g for g in gas_list if g in VARIABLE_NAMES]
+    if not gas_list:
+        gas_list = ['NO2']
+
+    # Build bounds around route with padding
+    pad_deg = 1.0
+    lat_min = min(o_lat, d_lat) - pad_deg
+    lat_max = max(o_lat, d_lat) + pad_deg
+    lon_min = min(o_lon, d_lon) - pad_deg
+    lon_max = max(o_lon, d_lon) + pad_deg
+
+    # Load gases using center as mid-point to reuse loader
+    center_lat = (o_lat + d_lat) / 2
+    center_lon = (o_lon + d_lon) / 2
+    radius = max(abs(lat_max - lat_min), abs(lon_max - lon_min)) / 2
+    gas_data, _, _ = load_and_analyze_for_gases(gas_list, center_lat, center_lon, radius, origin_name)
+
+    # Fetch road routes (with alternatives)
+    osrm_routes = fetch_osrm_routes(o_lat, o_lon, d_lat, d_lon, alternatives=True)
+    routes_payload: List[Dict[str, Any]] = []
+    if osrm_routes:
+        hotspot_circles = build_hotspot_circles(gas_data)
+        for idx, rdata in enumerate(osrm_routes):
+            geom = rdata.get('geometry', {})
+            coords = geom.get('coordinates') or []
+            # OSRM returns [lon, lat]; convert to [lat, lon] for Leaflet consumption we use
+            latlon_coords = [[float(c[1]), float(c[0])] for c in coords]
+            samples = resample_polyline_km(latlon_coords, max(5.0, float(grid_step_km)))
+            score, danger_pts, per_point_sev, blocked = score_route_exposure(
+                samples, gas_data, gas_list, proximity_km=10.0, hotspot_circles=hotspot_circles,
+                hard_block_threshold=3, hotspot_extra_buffer_km=3.0
+            )
+            routes_payload.append({
+                "name": f"Route {idx+1}",
+                "distance_km": float(rdata.get('distance', 0.0)) / 1000.0,
+                "duration_min": float(rdata.get('duration', 0.0)) / 60.0,
+                "coords": latlon_coords,
+                "score": score,
+                "danger": danger_pts,
+                "severity": per_point_sev,
+                "blocked": blocked,
+            })
+        # Choose safest (lowest score). If tie, choose shortest distance.
+        if routes_payload:
+            # Prefer unblocked routes first
+            unblocked = [r for r in routes_payload if not r.get('blocked')]
+            candidates = unblocked if unblocked else routes_payload
+            candidates.sort(key=lambda x: (x['score'], x['distance_km']))
+            safest = candidates[0]
+            for r in routes_payload:
+                r["safest"] = (r is safest)
+            status_text = (
+                f"Safest route selected (exposure score {safest['score']:.0f})" if not safest.get('blocked')
+                else f"All routes near high pollution; least exposure selected (score {safest['score']:.0f})"
+            )
+        else:
+            status_text = "No road routes available; falling back to straight line"
+    else:
+        # Fallback: straight line sampling
+        samples = sample_line(o_lat, o_lon, d_lat, d_lon, max(5.0, float(grid_step_km)))
+        hotspot_circles = build_hotspot_circles(gas_data)
+        score, danger_pts, per_point_sev, blocked = score_route_exposure(
+            samples, gas_data, gas_list, proximity_km=10.0, hotspot_circles=hotspot_circles,
+            hard_block_threshold=3, hotspot_extra_buffer_km=3.0
+        )
+        routes_payload = [{
+            "name": "Direct",
+            "distance_km": haversine_km(o_lat, o_lon, d_lat, d_lon),
+            "duration_min": None,
+            "coords": [[lat, lon] for lat, lon in samples],
+            "score": score,
+            "danger": danger_pts,
+            "severity": per_point_sev,
+            "safest": True,
+            "blocked": blocked,
+        }]
+        status_text = "Road routing unavailable; evaluated direct path"
+
+    # Prepare hotspots overlay (limited for performance)
+    hotspots_geojson = gather_hotspots_geojson(gas_data, limit=50)
+
+    return templates.TemplateResponse("route.html", {
+        "request": request,
+        "origin_name": origin_name,
+        "dest_name": dest_name,
+        "origin": {"lat": o_lat, "lon": o_lon},
+        "dest": {"lat": d_lat, "lon": d_lon},
+        "gases": gas_list,
+        "status_text": status_text,
+        "routes": json.dumps(routes_payload),
+        "hotspots_geojson": json.dumps(hotspots_geojson),
+        "alt_available": any([not r.get('safest') for r in routes_payload]),
+        "grid_step_km": grid_step_km,
+    })
+
+
+@app.get("/route/alternate", response_class=HTMLResponse)
+async def route_alternate(
+    request: Request,
+    origin: str = Query(...),
+    destination: str = Query(...),
+    gases: str = Query(default="NO2,AI"),
+    grid_step_km: int = Query(default=20),
+):
+    return await analyze_route(request, origin, destination, gases, grid_step_km)
+
+
 @app.post("/api/analyze")
 async def analyze_api(
     location: Optional[str] = Form(default=""),
@@ -753,12 +1236,9 @@ async def api_hotspots(
     if not gas_list:
         gas_list = ['NO2']
 
-    _, _, _ = load_and_analyze_for_gases(gas_list, lat_val, lon_val, radius, location_name)
-    _, hotspots, _ = load_and_analyze_for_gases(gas_list, lat_val, lon_val, radius, location_name)
-    # Best-effort reverse geocode a subset to limit requests
-    for h in hotspots[:20]:
-        h['place'] = reverse_geocode(h['center_lat'], h['center_lon'])
-    return hotspots_to_geojson(hotspots)
+    gas_data, _, _ = load_and_analyze_for_gases(gas_list, lat_val, lon_val, radius, location_name)
+    # Reuse same hotspot circle computation as routing map
+    return gather_hotspots_geojson(gas_data, limit=200)
 
 
 # -----------------------------

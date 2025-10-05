@@ -434,6 +434,67 @@
               layer.bindPopup(`<b>${p.gas}</b><br>Level: ${p.level}<br>Max: ${maxv}<br>Mean: ${meanv}<br>Area: ${p.area_km2?.toFixed ? p.area_km2.toFixed(1) : p.area_km2} km²`);
           }
       }).addTo(map);
+        const center = [{{ coords.lat }}, {{ coords.lon }}];
+        const radius = {{ radius }};
+        const gases = '{{ ",".join(gases) }}';
+        const locationName = encodeURIComponent('{{ location }}');
+
+        const map = L.map('map').setView(center, 9);
+        const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        function colorForLevel(level) {
+            switch (level) {
+                case 'hazardous': return '#8E44AD'; // purple
+                case 'very_unhealthy': return '#E74C3C'; // red
+                case 'unhealthy': return '#E67E22'; // orange
+                case 'moderate': return '#F1C40F'; // yellow
+                default: return '#2ECC71'; // green (good/unknown)
+            }
+        }
+
+        function severityIndex(level) {
+            if (level === 'hazardous') return 4;
+            if (level === 'very_unhealthy') return 3;
+            if (level === 'unhealthy') return 2;
+            if (level === 'moderate') return 1;
+            return 0;
+        }
+
+        const hotspotCircles = L.layerGroup().addTo(map);
+
+        const centerMarker = L.marker(center).addTo(map).bindPopup('Center: {{ location }}');
+        const circle = L.circle(center, { radius: radius * 111000, color: '#000', fill: false, weight: 1, dashArray: '5,5' }).addTo(map);
+
+        async function refreshHotspots() {
+            try {
+                const url = `/api/hotspots?location=${locationName}&latitude=${center[0]}&longitude=${center[1]}&radius=${radius}&gases=${encodeURIComponent(gases)}`;
+                const res = await fetch(url);
+                const geojson = await res.json();
+                hotspotCircles.clearLayers();
+                (geojson.features || []).forEach(f => {
+                    if (!f.geometry || f.geometry.type !== 'Point') return;
+                    const p = f.properties || {};
+                    const lat = f.geometry.coordinates[1];
+                    const lon = f.geometry.coordinates[0];
+                    const color = colorForLevel(p.level);
+                    const radiusMeters = (p.radius_km || 5) * 1000;
+                    const layer = L.circle([lat, lon], { radius: radiusMeters, color, fillColor: color, fillOpacity: 0.25, weight: 1 });
+                    const maxv = p.max_value ? Number(p.max_value).toExponential(2) : 'n/a';
+                    const meanv = p.mean_value ? Number(p.mean_value).toExponential(2) : 'n/a';
+                    layer.bindPopup(`<b>${p.gas}</b><br>Level: ${p.level}<br>Max: ${maxv}<br>Mean: ${meanv}<br>Area: ${p.area_km2?.toFixed ? p.area_km2.toFixed(1) : p.area_km2} km²`);
+                    layer.addTo(hotspotCircles);
+                });
+            } catch (e) { /* swallow */ }
+        }
+
+        refreshHotspots();
+        setInterval(refreshHotspots, 10000); // 10s polling
+    </script>
+</body>
+</html>
 
       const centerMarker = L.marker(center).addTo(map).bindPopup('Center: {{ location }}');
       const circle = L.circle(center, { radius: radius * 111000, color: '#000', fill: false, weight: 1, dashArray: '5,5' }).addTo(map);
