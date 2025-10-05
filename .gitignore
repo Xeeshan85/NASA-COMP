@@ -1,53 +1,156 @@
-# Python bytecode and caches
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-
-# Build artifacts
-build/
-dist/
-*.egg-info/
-.eggs/
+*.so
+*$py.class
 
 # Virtual environments
 venv/
 .venv/
 ENV/
 env/
+env.bak/
+venv.bak/
 
 # Environment / secrets
 .env
 .env.*
+.env.local
+.env.production
+.env.staging
+secrets.json
+config.json
 
-# Test, coverage, notebooks
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+develop-eggs/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg
+MANIFEST
+.installed.cfg
+
+# Testing
 .pytest_cache/
 .coverage*
 htmlcov/
-.ipynb_checkpoints/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+cover/
 
-# IDE/editor
+# IDE/Editor
 .vscode/
 .idea/
+*.iml
+*.ipr
+*.iws
+.spyderproject
+.spyproject
+.ropeproject
 
 # OS files
 .DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*~
+._*
+.fuse_hidden*
 
-# Data/cache directories
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+temp/
+tmp/
+logs/
+
+# Data and cache directories
+data/
+*.csv
+*.json
+!requirements.json
+output/
+outputs/
+results/
+.cache/
+cache/
 static/outputs/
 
-# Large data files (remote products)
+# Scientific computing caches
+.matplotlib/
+.cartopy/
+
+# Jupyter
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# Documentation
+docs/_build/
+/site
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+
+# Package managers
+.pdm.toml
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+*.sage.py
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Editor swap files
+*.swp
+*.swo
+
+# Node modules (if using frontend tools)
+node_modules/
+
+# Large data files (uncomment if needed)
 # *.nc
 # *.nc4
 # *.h5
 # *.hdf5
-
-# Logs and temp
-*.log
-*.tmp
-
-# Matplotlib / Cartopy caches
-.matplotlib/
-.cartopy/
-
