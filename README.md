@@ -206,6 +206,9 @@ curl "http://localhost:8000/api/combined_analysis?lat=35.37&lon=-119.02&gas=NO2"
 ✅ **Urban Planning**: Provided route optimization reducing commuter exposure by 40%  
 ✅ **School Safety**: Enabled outdoor activity scheduling based on real-time air quality
 
+<img width="7169" height="2209" alt="madre_wildfire_pollution_analysis" src="https://github.com/user-attachments/assets/b7480e32-f9c4-44b3-b72e-8bd9d69d191f" />
+
+
 ### Performance Metrics
 - **Response Time**: <60 seconds from query to actionable intelligence
 - **Accuracy**: Cross-validated with ground sensors (R² > 0.85)
