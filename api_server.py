@@ -1032,8 +1032,9 @@ async def analyze_route(
             candidates = unblocked if unblocked else routes_payload
             candidates.sort(key=lambda x: (x['score'], x['distance_km']))
             safest = candidates[0]
-            for r in routes_payload:
-                r["safest"] = (r is safest)
+            safest["safest"] = True
+            # Return only the single safest route
+            routes_payload = [safest]
             status_text = (
                 f"Safest route selected (exposure score {safest['score']:.0f})" if not safest.get('blocked')
                 else f"All routes near high pollution; least exposure selected (score {safest['score']:.0f})"
@@ -1074,7 +1075,7 @@ async def analyze_route(
         "status_text": status_text,
         "routes": json.dumps(routes_payload),
         "hotspots_geojson": json.dumps(hotspots_geojson),
-        "alt_available": any([not r.get('safest') for r in routes_payload]),
+        "alt_available": False,
         "grid_step_km": grid_step_km,
     })
 
