@@ -1,15 +1,3 @@
-Excellent. Based on your full architecture and purpose, here’s an **extremely detailed**, **cleanly structured**, and **copy-paste-ready README.md** that reflects the *real project you’ve built* — a NASA TEMPO-based pollution detection and visualization web app.
-
-I’ve also proposed a better project name:
-
-> 🌍 **AERIS** — *Air Emissions Regional Intelligence System*
-
-It’s short, professional, NASA-style, and fits your system perfectly.
-You can of course rename it if you prefer (I’ll use **AERIS** throughout below).
-
----
-
-```markdown
 # 🌍 AERIS — Air Emissions Regional Intelligence System
 
 **AERIS** is a FastAPI-powered web application that analyzes **NASA TEMPO (Tropospheric Emissions: Monitoring of Pollution)** satellite data to detect, classify, and visualize air pollution levels over wildfire-affected regions.  
@@ -61,7 +49,6 @@ It integrates **NASA Harmony API**, **scientific data processing**, and **intera
 ## 📂 Project Structure
 
 ```
-
 AERIS/
 ├── main.py               # FastAPI entry point
 ├── nasa_comp.py          # Core NASA TEMPO data logic (pollution analysis)
@@ -76,7 +63,6 @@ AERIS/
 │   └── tempo_data_2.nc
 ├── requirements.txt
 └── README.md
-
 ```
 
 ---
@@ -85,7 +71,6 @@ AERIS/
 
 ### 🧰 Dependencies
 ```
-
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 jinja2==3.1.4
@@ -97,67 +82,59 @@ matplotlib==3.8.4
 cartopy==0.22.0
 datatree==0.1.3
 requests==2.32.3
-
-````
+```
 
 Install all dependencies:
 ```bash
 pip install -r requirements.txt
-````
+```
 
 ---
 
 ## 🚀 Running the Application
 
 ### 1️⃣ Start the FastAPI Server
-
 ```bash
 uvicorn main:app --reload
 ```
 
 ### 2️⃣ Access in Browser
-
 ```
 http://127.0.0.1:8000
 ```
 
 ### 3️⃣ View Pages
-
-| URL       | Description                                    |
-| --------- | ---------------------------------------------- |
-| `/`       | Home page (input and description)              |
+| URL | Description |
+|------|-------------|
+| `/` | Home page (input and description) |
 | `/result` | Displays detected pollution metrics and alerts |
-| `/route`  | Shows interactive pollution visualization      |
+| `/route` | Shows interactive pollution visualization |
 
 ---
 
 ## 🧠 How It Works
 
-1. **User Request:**
-   User accesses AERIS dashboard via web interface.
+1. **User Request:**  
+   User accesses AERIS dashboard via web interface.  
 
-2. **Data Retrieval:**
+2. **Data Retrieval:**  
+   - App authenticates with **NASA Earthdata** (Harmony API).  
+   - Retrieves or loads existing `.nc` TEMPO NO₂ dataset from `TempData/`.  
 
-   * App authenticates with **NASA Earthdata** (Harmony API).
-   * Retrieves or loads existing `.nc` TEMPO NO₂ dataset from `TempData/`.
+3. **Data Processing:**  
+   - Converts NetCDF data to **xarray Dataset**  
+   - Normalizes NO₂ column density values  
+   - Detects spatial clusters via **SciPy connected components**  
 
-3. **Data Processing:**
+4. **Alert Generation:**  
+   - Computes mean and max NO₂ per region  
+   - Assigns severity classification  
+   - Generates health advisory text  
 
-   * Converts NetCDF data to **xarray Dataset**
-   * Normalizes NO₂ column density values
-   * Detects spatial clusters via **SciPy connected components**
-
-4. **Alert Generation:**
-
-   * Computes mean and max NO₂ per region
-   * Assigns severity classification
-   * Generates health advisory text
-
-5. **Visualization:**
-
-   * Renders geospatial map using **Cartopy**
-   * Annotates hotspots and region boundaries
-   * Displays results interactively via FastAPI templates
+5. **Visualization:**  
+   - Renders geospatial map using **Cartopy**  
+   - Annotates hotspots and region boundaries  
+   - Displays results interactively via FastAPI templates  
 
 ---
 
@@ -179,40 +156,38 @@ NO₂: 3.02e+16 molecules/cm²
 ## 🖼️ Example Visualization
 
 Output map (`madre_wildfire_pollution_analysis.png`) includes:
-
-* Pollution heatmap (NO₂ intensity)
-* Highlighted hotspots
-* Regional boundaries and coordinate labels
-* City-specific alerts overlayed
+- Pollution heatmap (NO₂ intensity)
+- Highlighted hotspots
+- Regional boundaries and coordinate labels
+- City-specific alerts overlayed
 
 ---
 
 ## 🧩 Customization
 
-| Parameter        | Location           | Description                               |
-| ---------------- | ------------------ | ----------------------------------------- |
-| `SPATIAL_BOUNDS` | `nasa_comp.py`     | Defines lat/lon range for analysis        |
-| `TIME_CONFIG`    | `nasa_comp.py`     | Start & end date for TEMPO data retrieval |
-| `thresholds`     | Internal constants | Adjusts NO₂ severity levels               |
-| `TEMPLATES`      | `templates/`       | Modify HTML layout for web UI             |
+| Parameter | Location | Description |
+|------------|-----------|-------------|
+| `SPATIAL_BOUNDS` | `nasa_comp.py` | Defines lat/lon range for analysis |
+| `TIME_CONFIG` | `nasa_comp.py` | Start & end date for TEMPO data retrieval |
+| `thresholds` | Internal constants | Adjusts NO₂ severity levels |
+| `TEMPLATES` | `templates/` | Modify HTML layout for web UI |
 
 ---
 
 ## 🧠 Future Enhancements
-
-* Integration with **real-time wildfire APIs (NASA FIRMS)**
-* Multi-pollutant support (O₃, CO, SO₂)
-* Database logging (PostgreSQL + GeoJSON export)
-* REST endpoints for external data access
+- Integration with **real-time wildfire APIs (NASA FIRMS)**  
+- Multi-pollutant support (O₃, CO, SO₂)  
+- Database logging (PostgreSQL + GeoJSON export)  
+- REST endpoints for external data access  
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`feature/your-feature-name`)
-3. Add changes and tests
-4. Submit a pull request
+1. Fork the repository  
+2. Create a feature branch (`feature/your-feature-name`)  
+3. Add changes and tests  
+4. Submit a pull request  
 
 Follow PEP8 style guidelines and ensure your code is documented.
 
@@ -220,8 +195,8 @@ Follow PEP8 style guidelines and ensure your code is documented.
 
 ## 📄 License
 
-MIT License
-© 2025 Xeeshan85
+MIT License  
+© 2025 Xeeshan85  
 
 Developed as part of a research initiative to enhance **environmental intelligence and wildfire response** using open NASA data.
 
@@ -229,19 +204,7 @@ Developed as part of a research initiative to enhance **environmental intelligen
 
 ## 🧭 Credits
 
-* **NASA TEMPO** — Tropospheric Emissions: Monitoring of Pollution
-* **NASA Harmony API** — Data Access and Retrieval
-* **Cartopy & Xarray** — Geospatial and scientific computing libraries
-* **FastAPI** — High-performance web framework for the dashboard
-
----
-
-> *“Turning satellite data into environmental intelligence — one map at a time.”*
-> — **AERIS Team**
-
-```
-
----
-
-
-
+- **NASA TEMPO** — Tropospheric Emissions: Monitoring of Pollution  
+- **NASA Harmony API** — Data Access and Retrieval  
+- **Cartopy & Xarray** — Geospatial and scientific computing libraries  
+- **FastAPI** — High-performance web framework for the dashboard  
