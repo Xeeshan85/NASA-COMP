@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - TEMPO Pollution Viewer</title>
+    <style>
+        body { background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; }
+        .container { max-width: 1080px; margin: 24px auto; padding: 0 16px; }
+        h1 { font-size: 22px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+        .meta { margin: 12px 0; padding: 12px; border: 1px solid #000; }
+        .grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; }
+        .panel { border: 1px solid #000; padding: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #000; padding: 6px; font-size: 13px; }
+        .badge { display: inline-block; padding: 2px 6px; border: 1px solid #000; margin-left: 6px; }
+        a.button { display: inline-block; padding: 8px 12px; background: #000; color: #fff; text-decoration: none; border: 1px solid #000; }
+        .small { font-size: 12px; color: #000; }
+        #map { width: 100%; height: 420px; border: 1px solid #000; }
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Results - TEMPO Pollution Viewer</h1>
+        <div class="meta">
+            <div><strong>Location:</strong> {{ location }} <span class="small">({{ coords.lat }}, {{ coords.lon }})</span></div>
+            <div><strong>Radius:</strong> {{ radius }}°</div>
+            <div><strong>Gases:</strong> {{ ", ".join(gases) }}</div>
+            <div><strong>Overall status:</strong> {{ overall_status }}</div>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                {% if image_url %}
+                <img src="{{ image_url }}" alt="Analysis plot" style="width:100%; border:1px solid #000;">
+                {% else %}
+                <div>No image available.</div>
+                {% endif %}
+
+                {% if per_gas_images %}
+                <div style="margin-top:12px;">
+                    <h3>Per-gas Tripanel Figures</h3>
+                    {% for pg in per_gas_images %}
+                        <div style="margin:8px 0; border:1px solid #000; padding:6px;">
+                            <div><strong>{{ pg.gas }}</strong></div>
+                            <img src="{{ pg.url }}" alt="{{ pg.gas }} tripanel" style="width:100%; border:1px solid #000;">
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="panel">
+                <h3>Regional Alerts</h3>
+                {% if alerts %}
+                <table>
+                    <thead>
+                        <tr><th>Gas</th><th>Level</th><th>Max</th><th>Mean</th><th>N</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for a in alerts %}
+                        <tr>
+                            <td>{{ a.gas }}</td>
+                            <td>{{ a.level }}</td>
+                            <td>{{ '%.2e'|format(a.max_value) }} {{ units[a.gas] }}</td>
+                            <td>{{ '%.2e'|format(a.mean_value) }} {{ units[a.gas] }}</td>
+                            <td>{{ a.num_pixels }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div>No alerts.</div>
+                {% endif %}
+
+                <h3 style="margin-top:16px;">Top Hotspots</h3>
+                {% if hotspots %}
+                <table>
+                    <thead>
+                        <tr><th>#</th><th>Gas</th><th>Level</th><th>Center (lat, lon)</th><th>Area (km²)</th><th>Max</th><th>Place</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for h in hotspots %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ h.gas }}</td>
+                            <td>{{ h.level }}</td>
+                            <td>{{ '%.4f'|format(h.center_lat) }}, {{ '%.4f'|format(h.center_lon) }}</td>
+                            <td>{{ '%.1f'|format(h.area_km2) }}</td>
+                            <td>{{ '%.2e'|format(h.max_value) }} {{ units[h.gas] }}</td>
+                            <td>{{ h.place if h.place else '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div>No hotspots detected.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+            <h3>Realtime Hotspots Map</h3>
+            <div id="map"></div>
+        </div>
+
+        <div style="margin-top:16px;">
+            <a href="/" class="button">New analysis</a>
+        </div>
+    </div>
+
+    <script>
+        const center = [{{ coords.lat }}, {{ coords.lon }}];
+        const radius = {{ radius }};
+        const gases = '{{ ",".join(gases) }}';
+        const locationName = encodeURIComponent('{{ location }}');
+
+        const map = L.map('map').setView(center, 9);
+        const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const hotspotLayer = L.geoJSON(null, {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: 6,
+                    color: '#000', fillColor: '#000', fillOpacity: 0.8,
+                    weight: 1
+                });
+            },
+            onEachFeature: function (feature, layer) {
+                const p = feature.properties || {};
+                const maxv = p.max_value ? Number(p.max_value).toExponential(2) : 'n/a';
+                const meanv = p.mean_value ? Number(p.mean_value).toExponential(2) : 'n/a';
+                layer.bindPopup(`<b>${p.gas}</b><br>Level: ${p.level}<br>Max: ${maxv}<br>Mean: ${meanv}<br>Area: ${p.area_km2?.toFixed ? p.area_km2.toFixed(1) : p.area_km2} km²`);
+            }
+        }).addTo(map);
+
+        const centerMarker = L.marker(center).addTo(map).bindPopup('Center: {{ location }}');
+        const circle = L.circle(center, { radius: radius * 111000, color: '#000', fill: false, weight: 1, dashArray: '5,5' }).addTo(map);
+
+        async function refreshHotspots() {
+            try {
+                const url = `/api/hotspots?location=${locationName}&latitude=${center[0]}&longitude=${center[1]}&radius=${radius}&gases=${encodeURIComponent(gases)}`;
+                const res = await fetch(url);
+                const geojson = await res.json();
+                hotspotLayer.clearLayers();
+                hotspotLayer.addData(geojson);
+            } catch (e) { /* swallow */ }
+        }
+
+        refreshHotspots();
+        setInterval(refreshHotspots, 10000); // 10s polling
+    </script>
+</body>
+</html>
+
+
