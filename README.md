@@ -9,17 +9,17 @@
 
 ---
 
-## 🎯 Overview
+## Overview
 
-**AERIS (Air Emissions Regional Intelligence System)** is an early warning and smart route planning platform that addresses a critical global challenge: **99% of people worldwide breathe air exceeding WHO pollution guidelines**. By integrating NASA TEMPO satellite data with advanced analytics, AERIS transforms complex atmospheric measurements into real-time health protection tools.
+**AERIS** is an early warning and smart route planning platform that addresses a critical global challenge: **99% of people worldwide breathe air exceeding WHO pollution guidelines**. By integrating NASA TEMPO satellite data with advanced analytics, AERIS transforms complex atmospheric measurements into real-time health protection tools.
 
 ### What Makes AERIS Unique?
 
-- **🛰️ Real-Time Satellite Integration**: Processes NASA TEMPO data for NO₂, CH₂O, aerosols, PM, and O₃
-- **🚨 Early Warning System**: Automated pollution hotspot detection with EPA-aligned severity classification
-- **🗺️ Smart Route Planning**: AI-powered travel optimization to minimize pollution exposure
-- **🌦️ Predictive Analytics**: 3-hour pollutant movement forecasting using meteorological data
-- **⚡ Sub-Minute Response**: Critical health decisions delivered in under 60 seconds
+- **Near Real-Time Satellite Integration**: Processes NASA TEMPO data for NO₂, CH₂O, aerosols, PM, and O₃
+- **Early Warning System**: Automated pollution hotspot detection with EPA-aligned severity classification
+- **Smart Route Planning**: Travel optimization to minimize pollution exposure
+- **Predictive Analytics**: 3-hour pollutant movement forecasting using meteorological data
+- **Sub-Minute Response**: Critical health decisions delivered in under 60 seconds
 
 ---
 
@@ -29,7 +29,7 @@
 
 | Feature | Description |
 |---------|-------------|
-| **Multi-Pollutant Analysis** | Real-time monitoring of NO₂, formaldehyde, aerosols, particulate matter, and ozone |
+| **Multi-Pollutant Analysis** | Near Real-time monitoring of NO₂, formaldehyde, aerosols, particulate matter, and ozone |
 | **Hotspot Detection** | Spatial clustering algorithms (SciPy) identify pollution clusters with geographic precision |
 | **Health Alerts** | EPA-aligned classification: Good → Moderate → Unhealthy → Very Unhealthy → Hazardous |
 | **Weather Integration** | WeatherAPI data predicts pollutant dispersion based on wind, temperature, and humidity |
@@ -47,7 +47,7 @@
 
 ---
 
-## 📊 System Architecture
+## System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -277,47 +277,19 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 | Name | Role | LinkedIn |
 |------|------|----------|
-| **[Team Member 1]** | Lead Developer & System Architect | [LinkedIn Profile](#) |
-| **[Team Member 2]** | Data Scientist & Algorithm Design | [LinkedIn Profile](#) |
-| **[Team Member 3]** | Frontend Developer & UX Design | [LinkedIn Profile](#) |
-| **[Team Member 4]** | AI Integration & API Development | [LinkedIn Profile](#) |
+| **M Zeeshan  ** | Lead Developer & System Architect | [LinkedIn Profile](https://www.linkedin.com/in/m-zeeshan-naveed/) |
+| **M Faheem   ** | Data Scientist & Backend Developer | [LinkedIn Profile](https://www.linkedin.com/in/muhammad-faheem-367a1b279) |
+| **Amar Rameez** | AI Developer & QA & UI/UX | [LinkedIn Profile](https://www.linkedin.com/in/amar-rameez-a5337022a/) |
 
-*Developed for NASA Space Apps Challenge 2024*
+*Developed for NASA Space Apps Challenge 2025*
 
----
 
-## 📞 Contact & Support
-
-- **Project Repository**: [github.com/Xeeshan85/aeris](https://github.com/Xeeshan85/air-emissions-regional-intelligence-system)
-- **Issues**: [GitHub Issues](https://github.com/Xeeshan85/air-emissions-regional-intelligence-system/issues)
-- **Documentation**: [Project Wiki](#)
-- **Email**: [Your Team Email]
-
----
-
-## 📚 Citations
-
-### Academic References
-1. NASA TEMPO Science Team. (2024). *TEMPO Data Product User Guide*. Smithsonian Astrophysical Observatory. https://tempo.si.edu/data.html
-2. U.S. Environmental Protection Agency. (2024). *Air Quality Index (AQI) - A Guide to Air Quality and Your Health*. EPA-454/K-03-002.
-3. World Health Organization. (2021). *WHO Global Air Quality Guidelines: Particulate Matter, Ozone, Nitrogen Dioxide, Sulfur Dioxide and Carbon Monoxide*. WHO Press.
-
-### Technical Documentation
-4. Zoogman, P., et al. (2017). "Tropospheric Emissions: Monitoring of Pollution (TEMPO)." *Journal of Quantitative Spectroscopy and Radiative Transfer*, 186, 17-39.
-5. NASA Air Quality Applied Sciences Team. (2023). *Satellite-Based Air Quality Monitoring Best Practices*. https://www.nasa.gov/aqast
-
-### Software & Libraries
-6. FastAPI Framework: https://fastapi.tiangolo.com/
-7. xarray Documentation: https://docs.xarray.dev/
-8. Cartopy Geospatial Library: https://scitools.org.uk/cartopy/
-
----
 
 <div align="center">
 
 **🌍 Turning Satellite Data into Environmental Intelligence 🛰️**
 
-*Built with ❤️ for NASA Space Apps Challenge 2024*
+*Built with ❤️ for NASA Space Apps Challenge 2025*
 
 [![GitHub stars](https://img.shields.io/github/stars/Xeeshan85/aeris?style=social)](https://github.com/Xeeshan85/air-emissions-regional-intelligence-system)
 [![GitHub forks](https://img.shields.io/github/forks/Xeeshan85/aeris?style=social)](https://github.com/Xeeshan85/air-emissions-regional-intelligence-system/fork)
