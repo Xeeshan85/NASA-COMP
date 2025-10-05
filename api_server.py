@@ -19,6 +19,8 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from matplotlib.patches import Circle
 import math
+from weather_service import get_weather_data, get_pollutant_movement_prediction
+from groq_service import generate_weather_interpretation, generate_prediction_interpretation
 import json
 import requests
 
@@ -607,6 +609,8 @@ async def analyze(
     longitude: Optional[str] = Form(default=""),
     radius: float = Form(default=0.3),
     gases: Optional[str] = Form(default="NO2"),
+    include_weather: bool = Form(default=True),
+    include_pollutant_prediction: bool = Form(default=True),
 ):
     location_name = location.strip() or "Custom Location"
 
@@ -662,6 +666,39 @@ async def analyze(
             h_with_place['place'] = place
         enriched_hotspots.append(h_with_place)
 
+    # Fetch weather data if requested
+    weather_data = None
+    pollutant_predictions = None
+    weather_interpretation = None
+    prediction_interpretation = None
+    if include_weather or include_pollutant_prediction:
+        try:
+            weather_data = get_weather_data(lat_val, lon_val, days=1)
+            if "error" in weather_data:
+                weather_data = None
+            elif weather_data:
+                try:
+                    weather_interpretation = generate_weather_interpretation(weather_data, location_name)
+                except Exception:
+                    weather_interpretation = None
+        except Exception:
+            weather_data = None
+
+    if include_pollutant_prediction and weather_data and "error" not in weather_data:
+        try:
+            pollutant_predictions = get_pollutant_movement_prediction(lat_val, lon_val)
+            if "error" in pollutant_predictions:
+                pollutant_predictions = None
+            else:
+                pollutant_predictions = pollutant_predictions.get("predictions_next_3h", [])
+                if pollutant_predictions:
+                    try:
+                        prediction_interpretation = generate_prediction_interpretation(pollutant_predictions, location_name)
+                    except Exception:
+                        prediction_interpretation = None
+        except Exception:
+            pollutant_predictions = None
+
     return templates.TemplateResponse("result.html", {
         "request": request,
         "image_url": image_url,
@@ -674,7 +711,76 @@ async def analyze(
         "overall_status": overall_status,
         "units": UNITS,
         "per_gas_images": per_gas_images,
+        "weather_data": weather_data,
+        "pollutant_predictions": pollutant_predictions,
+        "weather_interpretation": weather_interpretation,
+        "prediction_interpretation": prediction_interpretation,
     })
+# -----------------------------
+# Weather API Endpoints
+# -----------------------------
+@app.get("/api/weather")
+async def api_weather(
+    lat: float = Query(..., description="Latitude coordinate"),
+    lon: float = Query(..., description="Longitude coordinate"),
+    days: int = Query(1, description="Number of forecast days")
+):
+    """
+    Get current weather conditions and forecast data for a specific location.
+    Integrates with WeatherAPI.com to provide real-time weather data.
+    """
+    return get_weather_data(lat, lon, days)
+
+
+@app.get("/api/pollutant_movement")
+async def api_pollutant_movement(
+    lat: float = Query(..., description="Latitude coordinate"),
+    lon: float = Query(..., description="Longitude coordinate")
+):
+    """
+    Predict air quality movement and concentration changes based on wind patterns.
+    Uses weather data to forecast pollutant dispersion for the next 3 hours.
+    """
+    return get_pollutant_movement_prediction(lat, lon)
+
+
+@app.get("/api/combined_analysis")
+async def api_combined_analysis(
+    lat: float = Query(..., description="Latitude coordinate"),
+    lon: float = Query(..., description="Longitude coordinate"),
+    radius: float = Query(0.3, description="Analysis radius in degrees"),
+    gases: Optional[str] = Query("NO2", description="Comma-separated list of gases to analyze")
+):
+    """
+    Combined analysis providing both satellite pollution data and weather information.
+    This endpoint integrates TEMPO satellite data with real-time weather conditions.
+    """
+    # Get weather data
+    weather_data = get_weather_data(lat, lon, days=1)
+    # Get satellite pollution data
+    gas_list = [g.strip().upper() for g in (gases or "NO2").split(',') if g.strip()]
+    gas_list = [g for g in gas_list if g in VARIABLE_NAMES]
+    if not gas_list:
+        gas_list = ['NO2']
+    location_name = "Combined Analysis Location"
+    gas_data, all_hotspots, all_alerts = load_and_analyze_for_gases(gas_list, lat, lon, radius, location_name)
+    # Create combined response
+    result = {
+        "location": {
+            "latitude": lat,
+            "longitude": lon,
+            "name": location_name
+        },
+        "weather": weather_data,
+        "satellite_data": {
+            "gases_analyzed": gas_list,
+            "alerts": all_alerts,
+            "hotspots": all_hotspots[:10],  # Top 10 hotspots
+            "overall_status": max([a['severity'] for a in all_alerts], default=0)
+        },
+        "analysis_timestamp": dt.datetime.utcnow().isoformat()
+    }
+    return result
 
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

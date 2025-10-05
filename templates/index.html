@@ -68,6 +68,19 @@
                 </div>
             </div>
 
+            <div class="row">
+                <div>
+                    <label for="include_weather">Include Weather Data</label>
+                    <input type="checkbox" name="include_weather" id="include_weather" checked>
+                    <div class="hint">Get real-time weather conditions and forecasts</div>
+                </div>
+                <div>
+                    <label for="include_pollutant_prediction">Include Pollutant Movement Prediction</label>
+                    <input type="checkbox" name="include_pollutant_prediction" id="include_pollutant_prediction" checked>
+                    <div class="hint">Predict pollutant dispersion for next 3 hours</div>
+                </div>
+            </div>
+
             <button type="submit">Analyze</button>
         </form>
 
@@ -98,7 +111,8 @@
         </form>
 
         <footer>
-            Cached data from TempData is used. Enter a location or coords, then Analyze.
+            Cached data from TempData is used. Enter a location or coords, then Analyze.<br>
+            <strong>Weather Integration:</strong> Real-time weather data and pollutant movement prediction available when weather options are enabled.
         </footer>
     </div>
 </body>
