@@ -35,14 +35,13 @@ htmlcov/
 Thumbs.db
 
 # Data/cache directories
-TempData/
 static/outputs/
 
 # Large data files (remote products)
-*.nc
-*.nc4
-*.h5
-*.hdf5
+# *.nc
+# *.nc4
+# *.h5
+# *.hdf5
 
 # Logs and temp
 *.log
