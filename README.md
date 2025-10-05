@@ -1,149 +1,294 @@
-Excellent. Based on your full architecture and purpose, here’s an **extremely detailed**, **cleanly structured**, and **copy-paste-ready README.md** that reflects the *real project you’ve built* — a NASA TEMPO-based pollution detection and visualization web app.
+# AERIS - Air Emissions Regional Intelligence SystemExcellent. Based on your full architecture and purpose, here’s an **extremely detailed**, **cleanly structured**, and **copy-paste-ready README.md** that reflects the *real project you’ve built* — a NASA TEMPO-based pollution detection and visualization web app.
 
-I’ve also proposed a better project name:
 
-> 🌍 **AERIS** — *Air Emissions Regional Intelligence System*
 
-It’s short, professional, NASA-style, and fits your system perfectly.
+A web-based application for analyzing NASA TEMPO satellite data to monitor air pollution levels and detect pollution hotspots in real-time.I’ve also proposed a better project name:
+
+
+
+## Overview> 🌍 **AERIS** — *Air Emissions Regional Intelligence System*
+
+
+
+AERIS is a FastAPI-powered web application that processes NASA TEMPO (Tropospheric Emissions: Monitoring of Pollution) satellite data to provide comprehensive air quality analysis. The system combines satellite data processing, weather integration, and interactive visualization to deliver actionable air quality intelligence.It’s short, professional, NASA-style, and fits your system perfectly.
+
 You can of course rename it if you prefer (I’ll use **AERIS** throughout below).
+
+## Features
 
 ---
 
-```markdown
-# 🌍 AERIS — Air Emissions Regional Intelligence System
+### Core Capabilities
 
-**AERIS** is a FastAPI-powered web application that analyzes **NASA TEMPO (Tropospheric Emissions: Monitoring of Pollution)** satellite data to detect, classify, and visualize air pollution levels over wildfire-affected regions.  
+- **Multi-Gas Analysis**: Support for NO₂, CH₂O, AI (Aerosol Index), PM, and O₃ pollutants```markdown
+
+- **Hotspot Detection**: Automated identification and classification of pollution clusters# 🌍 AERIS — Air Emissions Regional Intelligence System
+
+- **Real-time Weather Integration**: Current weather conditions and pollutant movement prediction
+
+- **Interactive Mapping**: Live hotspot visualization with Leaflet.js**AERIS** is a FastAPI-powered web application that analyzes **NASA TEMPO (Tropospheric Emissions: Monitoring of Pollution)** satellite data to detect, classify, and visualize air pollution levels over wildfire-affected regions.  
+
+- **Route Safety Analysis**: Air quality assessment for travel routes
 
 Originally focused on the **Madre Wildfire Region (New Cuyama, California)**, the system can be adapted to monitor any geographic area and time window.  
 
-It integrates **NASA Harmony API**, **scientific data processing**, and **interactive web visualization** to provide real-time regional air quality intelligence.
+### Data Processing
 
----
+- NetCDF data parsing and analysis using xarrayIt integrates **NASA Harmony API**, **scientific data processing**, and **interactive web visualization** to provide real-time regional air quality intelligence.
+
+- Pollution threshold classification (Good, Moderate, Unhealthy, Very Unhealthy, Hazardous)
+
+- Spatial clustering with SciPy for hotspot detection---
+
+- Geographic coordinate handling and reverse geocoding
 
 ## 🛰️ Key Features
 
-### 🔹 NASA TEMPO Integration
-- Automatically retrieves **NO₂ Level-3** datasets via **NASA Harmony API**
-- Works with existing `.nc` NetCDF data (stored in `TempData/`)
+### Visualization
+
+- Multi-gas concentration heatmaps### 🔹 NASA TEMPO Integration
+
+- Tripanel analysis figures per gas- Automatically retrieves **NO₂ Level-3** datasets via **NASA Harmony API**
+
+- Interactive web maps with pollution overlays- Works with existing `.nc` NetCDF data (stored in `TempData/`)
+
+- Automated report generation with AI interpretations
 
 ### 🔹 Pollution & Hotspot Detection
-- Applies **region-based thresholding** to identify pollution hotspots  
+
+## Project Structure- Applies **region-based thresholding** to identify pollution hotspots  
+
 - Uses **connected-region labeling (SciPy)** for spatial clustering  
-- Supports wildfire-specific detection thresholds for accurate classification
 
-### 🔹 Air Quality Intelligence
-- Generates detailed **air quality summaries**, **regional alerts**, and **health guidance**
-- Classifies severity into: *Low, Moderate, Unhealthy, Very Unhealthy, Hazardous*
-
-### 🔹 Visualization & Web Dashboard
-- Interactive visualization using **Matplotlib** + **Cartopy**
-- Clean **web interface** served via **FastAPI** + **Jinja2**
-- Heatmaps, hotspot overlays, and alert panels rendered directly in browser
-
-### 🔹 Modular & Reusable
-- Clear separation of computational core (`nasa_comp.py`) and web layer (`main.py`)
-- Reusable components for data loading, visualization, and reporting
-
----
-
-## 🧩 System Architecture
-
-| Layer | Components | Description |
-|--------|-------------|-------------|
-| **Web Server** | FastAPI + Uvicorn | Serves web dashboard and handles requests |
-| **Frontend** | Jinja2 templates, CSS | Displays results (`index.html`, `result.html`, `route.html`) |
-| **Computation** | NumPy, SciPy, Xarray | Handles NASA TEMPO data parsing and analysis |
-| **Visualization** | Matplotlib, Cartopy | Generates pollution heatmaps and geospatial overlays |
-| **Storage** | NetCDF (`.nc`) files | Stored in `TempData/` for caching and offline use |
-
----
-
-## 📂 Project Structure
-
-```
+```- Supports wildfire-specific detection thresholds for accurate classification
 
 AERIS/
-├── main.py               # FastAPI entry point
-├── nasa_comp.py          # Core NASA TEMPO data logic (pollution analysis)
-├── templates/
-│   ├── index.html        # Input interface / home page
-│   ├── result.html       # Pollution result display
-│   └── route.html        # Visualization / map page
-├── static/
-│   └── style.css         # Web styling
-├── TempData/
-│   ├── tempo_data_1.nc   # Cached TEMPO data
-│   └── tempo_data_2.nc
+
+├── api_server.py              # Main FastAPI application### 🔹 Air Quality Intelligence
+
+├── weather_service.py         # Weather data integration- Generates detailed **air quality summaries**, **regional alerts**, and **health guidance**
+
+├── groq_service.py           # AI interpretation service  - Classifies severity into: *Low, Moderate, Unhealthy, Very Unhealthy, Hazardous*
+
+├── pollutant_predictor.py    # Pollutant movement prediction
+
+├── TEMPO.py                  # NASA TEMPO data processing### 🔹 Visualization & Web Dashboard
+
+├── GroundSensorAnalysis.py   # Ground sensor integration- Interactive visualization using **Matplotlib** + **Cartopy**
+
+├── templates/- Clean **web interface** served via **FastAPI** + **Jinja2**
+
+│   ├── index.html           # Main input interface- Heatmaps, hotspot overlays, and alert panels rendered directly in browser
+
+│   ├── result.html          # Analysis results display
+
+│   └── route.html           # Route safety analysis### 🔹 Modular & Reusable
+
+├── static/- Clear separation of computational core (`nasa_comp.py`) and web layer (`main.py`)
+
+│   ├── style.css           # Web styling- Reusable components for data loading, visualization, and reporting
+
+│   └── outputs/            # Generated analysis images
+
+├── TempData/               # Cached TEMPO data files---
+
 ├── requirements.txt
-└── README.md
+
+└── README.md## 🧩 System Architecture
+
+```
+
+| Layer | Components | Description |
+
+## Installation|--------|-------------|-------------|
+
+| **Web Server** | FastAPI + Uvicorn | Serves web dashboard and handles requests |
+
+1. **Clone the repository**| **Frontend** | Jinja2 templates, CSS | Displays results (`index.html`, `result.html`, `route.html`) |
+
+```bash| **Computation** | NumPy, SciPy, Xarray | Handles NASA TEMPO data parsing and analysis |
+
+git clone https://github.com/Xeeshan85/air-emissions-regional-intelligence-system.git| **Visualization** | Matplotlib, Cartopy | Generates pollution heatmaps and geospatial overlays |
+
+cd AERIS| **Storage** | NetCDF (`.nc`) files | Stored in `TempData/` for caching and offline use |
 
 ```
 
 ---
 
-## ⚙️ Requirements
+2. **Install dependencies**
 
-### 🧰 Dependencies
+```bash## 📂 Project Structure
+
+pip install -r requirements.txt
+
+``````
+
+
+
+3. **Set up environment variables**AERIS/
+
+Create a `.env` file with your API keys:├── main.py               # FastAPI entry point
+
+```├── nasa_comp.py          # Core NASA TEMPO data logic (pollution analysis)
+
+WEATHER_API_KEY=your_weather_api_key├── templates/
+
+GROQ_API_KEY=your_groq_api_key│   ├── index.html        # Input interface / home page
+
+```│   ├── result.html       # Pollution result display
+
+│   └── route.html        # Visualization / map page
+
+## Usage├── static/
+
+│   └── style.css         # Web styling
+
+### Starting the Application├── TempData/
+
+│   ├── tempo_data_1.nc   # Cached TEMPO data
+
+```bash│   └── tempo_data_2.nc
+
+uvicorn api_server:app --reload --host 0.0.0.0 --port 8000├── requirements.txt
+
+```└── README.md
+
+
+
+Access the application at `http://localhost:8000````
+
+
+
+### Web Interface---
+
+
+
+1. **Main Analysis** (`/`): Enter location coordinates or place names to analyze air quality## ⚙️ Requirements
+
+2. **Route Analysis** (`/route`): Assess air quality along travel routes
+
+3. **API Endpoints**: RESTful API for programmatic access### 🧰 Dependencies
+
 ```
+
+### API Endpoints
 
 fastapi==0.115.0
-uvicorn[standard]==0.30.6
-jinja2==3.1.4
-geopy==2.4.1
-numpy==1.26.4
+
+- `GET /api/weather` - Current weather datauvicorn[standard]==0.30.6
+
+- `GET /api/pollutant_movement` - Pollutant dispersion predictionjinja2==3.1.4
+
+- `GET /api/combined_analysis` - Integrated satellite and weather analysisgeopy==2.4.1
+
+- `GET /api/hotspots` - Pollution hotspot data in GeoJSON formatnumpy==1.26.4
+
 scipy==1.13.1
-xarray==2024.7.0
+
+## Configurationxarray==2024.7.0
+
 matplotlib==3.8.4
-cartopy==0.22.0
-datatree==0.1.3
-requests==2.32.3
 
-````
+### Analysis Parameterscartopy==0.22.0
 
-Install all dependencies:
-```bash
-pip install -r requirements.txt
-````
+- **Radius**: Analysis area radius in degrees (default: 0.3°)datatree==0.1.3
 
----
+- **Gases**: Comma-separated list of pollutants to analyzerequests==2.32.3
+
+- **Weather Integration**: Enable/disable real-time weather data
+
+- **Prediction**: Enable/disable pollutant movement forecasting````
+
+
+
+### Pollution ThresholdsInstall all dependencies:
+
+Thresholds are defined in `api_server.py` and can be customized for different pollutants:```bash
+
+- NO₂: 5.0e15 - 3.0e16 molecules/cm²pip install -r requirements.txt
+
+- CH₂O: 8.0e15 - 6.4e16 molecules/cm²````
+
+- AI: 1.0 - 7.0 index
+
+- PM: 0.2 - 2.0 dimensionless---
+
+- O₃: 220 - 500 Dobson Units
 
 ## 🚀 Running the Application
 
+## Data Sources
+
 ### 1️⃣ Start the FastAPI Server
 
-```bash
-uvicorn main:app --reload
-```
+- **NASA TEMPO**: Tropospheric pollution measurements
 
-### 2️⃣ Access in Browser
+- **WeatherAPI.com**: Real-time weather conditions```bash
 
-```
-http://127.0.0.1:8000
-```
+- **OpenStreetMap**: Base mapping datauvicorn main:app --reload
 
-### 3️⃣ View Pages
+- **OSRM**: Route optimization services```
+
+
+
+## Dependencies### 2️⃣ Access in Browser
+
+
+
+Key packages include:```
+
+- FastAPI and Uvicorn for web frameworkhttp://127.0.0.1:8000
+
+- xarray and netCDF4 for satellite data processing```
+
+- matplotlib and cartopy for visualization
+
+- scipy and numpy for scientific computing### 3️⃣ View Pages
+
+- geopy for geocoding services
 
 | URL       | Description                                    |
-| --------- | ---------------------------------------------- |
+
+See `requirements.txt` for complete dependency list.| --------- | ---------------------------------------------- |
+
 | `/`       | Home page (input and description)              |
-| `/result` | Displays detected pollution metrics and alerts |
+
+## Contributing| `/result` | Displays detected pollution metrics and alerts |
+
 | `/route`  | Shows interactive pollution visualization      |
 
----
+1. Fork the repository
 
-## 🧠 How It Works
+2. Create a feature branch (`git checkout -b feature/new-feature`)---
+
+3. Commit changes (`git commit -am 'Add new feature'`)
+
+4. Push to branch (`git push origin feature/new-feature`)## 🧠 How It Works
+
+5. Create a Pull Request
 
 1. **User Request:**
-   User accesses AERIS dashboard via web interface.
 
-2. **Data Retrieval:**
+## License   User accesses AERIS dashboard via web interface.
 
-   * App authenticates with **NASA Earthdata** (Harmony API).
+
+
+This project is licensed under the MIT License - see the LICENSE file for details.2. **Data Retrieval:**
+
+
+
+## Acknowledgments   * App authenticates with **NASA Earthdata** (Harmony API).
+
    * Retrieves or loads existing `.nc` TEMPO NO₂ dataset from `TempData/`.
 
-3. **Data Processing:**
+- NASA TEMPO mission for satellite data
 
-   * Converts NetCDF data to **xarray Dataset**
+- NASA Earthdata for data access infrastructure3. **Data Processing:**
+
+- WeatherAPI.com for weather services
+
+- Open source geospatial community   * Converts NetCDF data to **xarray Dataset**
    * Normalizes NO₂ column density values
    * Detects spatial clusters via **SciPy connected components**
 
