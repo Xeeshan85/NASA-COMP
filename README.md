@@ -51,7 +51,7 @@ It integrates **NASA Harmony API**, **scientific data processing**, and **intera
 ```
 AERIS/
 ├── main.py               # FastAPI entry point
-├── api_server.py          # Core NASA TEMPO data logic (pollution analysis)
+├── nasa_comp.py          # Core NASA TEMPO data logic (pollution analysis)
 ├── templates/
 │   ├── index.html        # Input interface / home page
 │   ├── result.html       # Pollution result display
@@ -59,12 +59,11 @@ AERIS/
 ├── static/
 │   └── style.css         # Web styling
 ├── TempData/
-│   ├── 117303683_TEMPO_NO2_L3_V03_20250703T190954Z_S011_subsetted.nc4  # Cached TEMPO data
-│   └── 117303684_TEMPO_NO2_L3_V03_20250703T200954Z_S012_subsetted.nc4
+│   ├── tempo_data_1.nc   # Cached TEMPO data
+│   └── tempo_data_2.nc
+├── madre_wildfire_pollution_analysis.png
+├── pollution_alert_map.png
 ├── requirements.txt
-├── tempo_all.py
-├── TEMPO.py
-├── GroundSensorAnalysis.py
 └── README.md
 ```
 
@@ -141,28 +140,21 @@ http://127.0.0.1:8000
 
 ---
 
-## 📊 Example Console Output
+## 🖼️ Visualization Results
 
-```
-🛰️ Dataset: NASA TEMPO (NO₂ Level-3)
-📅 Date Range: 2025-09-15 → 2025-09-20
-🌍 Region: Madre Wildfire, New Cuyama, CA
+### 🔸 NO₂ Pollution Heatmap
+This figure shows overall NO₂ concentration over the wildfire region.
 
-🚨 ALERT: BAKERSFIELD - HAZARDOUS
-📍 35.3733°N, 119.0187°W
-NO₂: 3.02e+16 molecules/cm²
-⚠️ ACTION: STAY INDOORS! Dangerous air quality detected.
-```
+<p align="center">
+  <img src="madre_wildfire_pollution_analysis.png" alt="NO2 Heatmap" width="80%">
+</p>
 
----
+### 🔸 Pollution Alert Map
+This map visualizes detected hotspots and regional alerts based on NO₂ thresholds.
 
-## 🖼️ Example Visualization
-
-Output map (`madre_wildfire_pollution_analysis.png`) includes:
-- Pollution heatmap (NO₂ intensity)
-- Highlighted hotspots
-- Regional boundaries and coordinate labels
-- City-specific alerts overlayed
+<p align="center">
+  <img src="pollution_alert_map.png" alt="Pollution Alert Map" width="80%">
+</p>
 
 ---
 
