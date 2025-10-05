@@ -1,12 +1,5 @@
-# AERIS - Air Emissions Regional Intelligence SystemExcellent. Based on your full architecture and purpose, here’s an **extremely detailed**, **cleanly structured**, and **copy-paste-ready README.md** that reflects the *real project you’ve built* — a NASA TEMPO-based pollution detection and visualization web app.
+# 🌍 **AERIS** — *Air Emissions Regional Intelligence System*
 
-
-
-A web-based application for analyzing NASA TEMPO satellite data to monitor air pollution levels and detect pollution hotspots in real-time.I’ve also proposed a better project name:
-
-
-
-## Overview> 🌍 **AERIS** — *Air Emissions Regional Intelligence System*
 
 
 
