@@ -122,11 +122,32 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
+        function colorForLevel(level) {
+            switch (level) {
+                case 'hazardous': return '#8E44AD'; // purple
+                case 'very_unhealthy': return '#E74C3C'; // red
+                case 'unhealthy': return '#E67E22'; // orange
+                case 'moderate': return '#F1C40F'; // yellow
+                default: return '#2ECC71'; // green (good/unknown)
+            }
+        }
+
+        function severityIndex(level) {
+            if (level === 'hazardous') return 4;
+            if (level === 'very_unhealthy') return 3;
+            if (level === 'unhealthy') return 2;
+            if (level === 'moderate') return 1;
+            return 0;
+        }
+
         const hotspotLayer = L.geoJSON(null, {
             pointToLayer: function (feature, latlng) {
+                const p = feature.properties || {};
+                const color = colorForLevel(p.level);
+                const r = 6 + severityIndex(p.level) * 2;
                 return L.circleMarker(latlng, {
-                    radius: 6,
-                    color: '#000', fillColor: '#000', fillOpacity: 0.8,
+                    radius: r,
+                    color: color, fillColor: color, fillOpacity: 0.85,
                     weight: 1
                 });
             },
