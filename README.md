@@ -3,9 +3,7 @@
 
 
 
-AERIS is a FastAPI-powered web application that processes NASA TEMPO (Tropospheric Emissions: Monitoring of Pollution) satellite data to provide comprehensive air quality analysis. The system combines satellite data processing, weather integration, and interactive visualization to deliver actionable air quality intelligence.It’s short, professional, NASA-style, and fits your system perfectly.
-
-You can of course rename it if you prefer (I’ll use **AERIS** throughout below).
+AERIS is a web application that processes NASA TEMPO (Tropospheric Emissions: Monitoring of Pollution) satellite data to provide comprehensive air quality analysis. The system combines satellite data processing, weather integration, and interactive visualization to deliver actionable air quality intelligence. 
 
 ## Features
 
@@ -19,7 +17,7 @@ You can of course rename it if you prefer (I’ll use **AERIS** throughout below
 
 - **Real-time Weather Integration**: Current weather conditions and pollutant movement prediction
 
-- **Interactive Mapping**: Live hotspot visualization with Leaflet.js**AERIS** is a FastAPI-powered web application that analyzes **NASA TEMPO (Tropospheric Emissions: Monitoring of Pollution)** satellite data to detect, classify, and visualize air pollution levels over wildfire-affected regions.  
+- **Interactive Mapping**: Live hotspot visualization with Leaflet.js
 
 - **Route Safety Analysis**: Air quality assessment for travel routes
 
